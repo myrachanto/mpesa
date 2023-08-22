@@ -27,7 +27,12 @@ func newMpesa(m *MpesaOpts) *Mpesa {
 		client:         client,
 	}
 }
-func Process(amount float32, partyB string) {
+
+// takes an amount float32 and phoneNumber 254700000000 and returns *STKPushRequestResponse, error
+// env variables include appKey, appSecret,baseUrl,shortcode,passkey,partyA,callback,AccountReference,TransactionDesc
+// partyA is your phone number 254700000000
+// baseUrl ttps://sandbox.safaricom.co.ke
+func Process(amount float32, PhoneNumber string) (*STKPushRequestResponse, error) {
 	err := godotenv.Load()
 	if err != nil {
 		log.Panicln("to load env files")
@@ -52,7 +57,7 @@ func Process(amount float32, partyB string) {
 
 	accessTokenResponse, err := mpesa.generateAccessToken()
 	if err != nil {
-		log.Fatalln(err)
+		return nil, err
 	}
 
 	fmt.Printf("%+v\n", accessTokenResponse)
@@ -64,16 +69,16 @@ func Process(amount float32, partyB string) {
 		Amount:            fmt.Sprintf("%.2f", amount), // Amount to be charged when checking out
 		PartyA:            partyA,                      // 2547XXXXXXXX
 		PartyB:            shortcode,
-		PhoneNumber:       partyB,   // 2547XXXXXXXX
-		CallBackURL:       callback, // https://
+		PhoneNumber:       PhoneNumber, // 2547XXXXXXXX
+		CallBackURL:       callback,    // https://
 		AccountReference:  AccountReference,
 		TransactionDesc:   TransactionDesc,
 	})
 
 	if err != nil {
-		log.Fatalln(err)
+		return nil, err
 	}
-	fmt.Printf("%+v\n", response)
+	return response, nil
 
 }
 func (m *Mpesa) generateAccessToken() (*MpesaAccessTokenResponse, error) {
