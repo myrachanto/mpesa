@@ -32,7 +32,8 @@ func newMpesa(m *MpesaOpts) *Mpesa {
 // env variables include appKey, appSecret,baseUrl,shortcode,passkey,partyA,callback,AccountReference,TransactionDesc
 // partyA is your phone number 254700000000
 // baseUrl ttps://sandbox.safaricom.co.ke
-func Process(amount float32, PhoneNumber string) (*STKPushRequestResponse, error) {
+func Process(amount int, PhoneNumber string) (*STKPushRequestResponse, error) {
+
 	err := godotenv.Load()
 	if err != nil {
 		log.Panicln("to load env files")
@@ -46,6 +47,7 @@ func Process(amount float32, PhoneNumber string) (*STKPushRequestResponse, error
 	callback := os.Getenv("callback")
 	AccountReference := os.Getenv("AccountReference")
 	TransactionDesc := os.Getenv("TransactionDesc")
+	// fmt.Println(appKey, appSecret, baseUrl, shortcode, passkey, partyA, callback)
 	mpesa := newMpesa(&MpesaOpts{
 		ConsumerKey:    appKey,
 		ConsumerSecret: appSecret,
@@ -59,15 +61,16 @@ func Process(amount float32, PhoneNumber string) (*STKPushRequestResponse, error
 	if err != nil {
 		return nil, err
 	}
-
+	total := fmt.Sprintf("%d", amount)
 	fmt.Printf("%+v\n", accessTokenResponse)
+	// fmt.Println("+++++++++++======", total)
 	response, err := mpesa.initiateSTKPushRequest(&STKPushRequestBody{
 		BusinessShortCode: shortcode,
 		Password:          password,
 		Timestamp:         timestamp,
 		TransactionType:   "CustomerPayBillOnline",
-		Amount:            fmt.Sprintf("%.2f", amount), // Amount to be charged when checking out
-		PartyA:            partyA,                      // 2547XXXXXXXX
+		Amount:            total,  // Amount to be charged when checking out
+		PartyA:            partyA, // 2547XXXXXXXX
 		PartyB:            shortcode,
 		PhoneNumber:       PhoneNumber, // 2547XXXXXXXX
 		CallBackURL:       callback,    // https://
@@ -136,7 +139,6 @@ func (m *Mpesa) initiateSTKPushRequest(body *STKPushRequestBody) (*STKPushReques
 	if err := json.Unmarshal(resp, &stkPushResponse); err != nil {
 		return nil, err
 	}
-
 	return stkPushResponse, nil
 }
 
